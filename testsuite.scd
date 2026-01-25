@@ -5,6 +5,8 @@
 		\testNoScript,
 		\testParameter,
 		\testFaustLib,
+		\testExcessiveOutputs,
+		\testTooFewOutputs,
 	],
 
 	testBasic: {
@@ -60,6 +62,36 @@
 			Faust.ar(1, \testLib);
 		}.loadToFloatArray(0.1, action: {|sig|
 			success = sig[2] < 0.0;
+			condition.unhang;
+		});
+		condition.hang;
+		success;
+	},
+
+	testExcessiveOutputs: {
+		var success = false;
+		var condition = Condition();
+		FaustDef(\testExcessive, "process = 0.5;").send;
+		s.sync;
+		{
+			Faust.ar(2, \testExcessive);
+		}.loadToFloatArray(0.1, action: {|sig|
+			success = sig[0] == 0.0;
+			condition.unhang;
+		});
+		condition.hang;
+		success;
+	},
+
+	testTooFewOutputs: {
+		var success = false;
+		var condition = Condition();
+		FaustDef(\testTooFew, "process = 0.5,0.6;").send;
+		s.sync;
+		{
+			Faust.ar(1, \testTooFew);
+		}.loadToFloatArray(0.1, action: {|sig|
+			success = sig[0] == 0.0;
 			condition.unhang;
 		});
 		condition.hang;

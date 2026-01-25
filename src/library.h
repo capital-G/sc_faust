@@ -13,6 +13,7 @@ struct CodeLibrary {
     int hash;
     llvm_dsp_factory* factory;
     int numParams;
+    int numOutputs;
 };
 
 /*! @brief payload for async callback to compile faust scripts */
@@ -31,6 +32,7 @@ struct CompileCodeCallbackPayload {
     // This gets filled in stage 2 which is NRT, and freed again in stage 4.
     llvm_dsp* dspInstance;
     SCUI* scUi;
+    int numOutputs;
 };
 
 /*! @brief takes an OSC message and compiles triggers an async compilation of the faust code */

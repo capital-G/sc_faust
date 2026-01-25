@@ -25,6 +25,14 @@ ScFaust::ScFaust() {
         Print("ERROR: Could not find faust factory with hash %d\n", hash);
         return;
     }
+    // we could handle too few outputs, but excessive outputs of a faust script
+    // would result in a buffer overflow which can lead to a crash.
+    // At some point we may support this, but for now we simply bail out.
+    if (mNumOutputs != node->numOutputs) {
+        Print("ERROR: Requested %d output channels, but Faust script only outputs %d channels\n", mNumOutputs,
+              node->numOutputs);
+        return;
+    }
 
     mScRtUi = new SCRTUI(mWorld, node->numParams);
     mDsp = node->factory->createDSPInstance();

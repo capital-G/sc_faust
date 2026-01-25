@@ -45,6 +45,7 @@ bool compileScript(World*, void* cmdData) {
     payload->dspInstance = payload->factory->createDSPInstance();
     payload->scUi = new SCUI();
     payload->dspInstance->buildUserInterface(payload->scUi);
+    payload->numOutputs = payload->dspInstance->getNumOutputs();
 
     // Print("Faust script has %d params\n", payload->scUi->getNumParams());
     writeParamsToFile(payload->scUi->getParams(), payload->paramExchangePath);
@@ -69,6 +70,7 @@ bool swapCode(World* world, void* cmdData) {
     newNode->hash = payload->hash;
     newNode->factory = payload->factory;
     newNode->next = gLibrary;
+    newNode->numOutputs = payload->numOutputs;
 
     gLibrary = newNode;
 
@@ -88,6 +90,7 @@ void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr)
     payload->scUi = nullptr;
     payload->code = nullptr;
     payload->paramExchangePath = nullptr;
+    payload->numOutputs = 0;
     payload->hash = args->geti();
 
     const char* exchangePath = args->gets();
