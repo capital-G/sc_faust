@@ -51,7 +51,7 @@ set (CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 if(UNIX AND NOT APPLE)
     # Linux: use pre-built Faust libraries + source repo for headers
-    set(FAUST_LIB_DIR "" CACHE PATH "Path to pre-built Faust libraries (containing lib/libfaust.so)")
+    set(FAUST_LIB_DIR "" CACHE PATH "Path to pre-built Faust libraries (containing lib/)")
     set(FAUST_SRC_DIR "" CACHE PATH "Path to Faust source repository (for headers in architecture/)")
 
     if(NOT FAUST_LIB_DIR)
@@ -69,14 +69,17 @@ if(UNIX AND NOT APPLE)
 
     target_include_directories(sc_faust PRIVATE ${FAUST_INCLUDE})
 
-    # Link against libfaust.so (includes LLVM support)
-    set(FAUST_LIBS "${FAUST_LIB}/libfaust.so")
-    target_link_libraries(sc_faust ${FAUST_LIBS})
+    # Static linking with libfaustwithllvm.a (self-contained, no runtime dependency)
+    set(FAUST_STATIC_LIB "${FAUST_LIB}/libfaustwithllvm.a")
 
-    # Set RPATH so the library can find libfaust.so at runtime
-    set_target_properties(sc_faust PROPERTIES
-        INSTALL_RPATH "$ORIGIN"
-        BUILD_WITH_INSTALL_RPATH TRUE
+    # System libraries required by LLVM/Faust
+    find_package(Threads REQUIRED)
+    target_link_libraries(sc_faust
+        ${FAUST_STATIC_LIB}
+        Threads::Threads
+        dl
+        z
+        m
     )
 else()
     # macOS: use system faust (e.g., from Homebrew)
