@@ -12,13 +12,14 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact-suffix: linux-x86-64
-            apt-dependencies: faust
+            libfaust-zip: https://github.com/grame-cncm/faust/releases/download/2.83.1/libfaust-ubuntu-x86_64.zip
           - os: macos-latest
             artifact-suffix: macos-arm64
+            libfaust-dmg: https://github.com/grame-cncm/faust/releases/download/2.83.1/Faust-2.83.1-arm64.dmg
             brew-dependencies: faust
           - os: macos-15-intel
             artifact-suffix: macos-x86-64
-            brew-dependencies: faust
+            libfaust-dmg: https://github.com/grame-cncm/faust/releases/download/2.83.1/Faust-2.83.1-x64.dmg
         #   - os: windows-2022
         #     artifact-suffix: win-x86-64
     runs-on: ${{ matrix.os }}
@@ -26,31 +27,26 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-        repository: grame-cncm/faust
-        path: faust
-        ref: master
     - name: Checkout SuperCollider
       uses: actions/checkout@v4
       with:
         repository: "supercollider/supercollider"
         ref: "main"
         path: "supercollider"
-    - name: Install brew dependencies
-      if: ${{ matrix.brew-dependencies }}
-      run: brew install ${{ matrix.brew-dependencies }}
-    - name: Install apt dependencies
-      if: ${{ matrix.os == 'ubuntu-latest' }}
+    - name: Download faust zip
+      if: ${{ matrix.libfaust-zip }}
       run: |
-        sudo apt-get update && sudo apt-get install -y faust
-    - name: Download faust
-      if: ${{ matrix.os == 'ubuntu-latest' }}
-      run: |
-        wget -O libfaust.zip https://github.com/grame-cncm/faust/releases/download/2.83.1/libfaust-ubuntu-x86_64.zip
+        wget -O libfaust.zip ${{ matrix.libfaust-zip }} 
         mkdir libfaust
         unzip libfaust.zip -d libfaust/
+    - name: Download faust dmg
+      if: ${{ matrix.libfaust-dmg }}
+      run: |
+        brew install sevenzip
+        wget -O libfaust.dmg ${{ matrix.libfaust-dmg }}
+        7zz libfaust.dmg -o./libfaustraw
+        mkdir libfaust
+        mv libfaustraw/Faust-*/Faust-*/lib libfaust/lib
     - name: Build Plugin
       shell: bash
       run: |

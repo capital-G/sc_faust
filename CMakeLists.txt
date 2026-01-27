@@ -49,64 +49,43 @@ target_include_directories(sc_faust PUBLIC ${SC_PATH}/common)
 # Faust part
 set (CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-if(UNIX AND NOT APPLE)
-    # Linux: use pre-built Faust libraries + source repo for headers
-    set(FAUST_LIB_DIR "" CACHE PATH "Path to pre-built Faust libraries (containing lib/)")
-    set(FAUST_SRC_DIR "" CACHE PATH "Path to Faust source repository (for headers in architecture/)")
+set(FAUST_SRC_DIR "${CMAKE_SOURCE_DIR}/external/faust" CACHE PATH "Path to Faust source repository")
 
-    if(NOT FAUST_LIB_DIR)
-        message(FATAL_ERROR "FAUST_LIB_DIR must be set to the path containing pre-built Faust libraries on Linux")
-    endif()
-    if(NOT FAUST_SRC_DIR)
-        message(FATAL_ERROR "FAUST_SRC_DIR must be set to the path of the Faust source repository on Linux")
-    endif()
+set(FAUST_LIB_DIR "" CACHE PATH "Path to pre-built Faust libraries (containing lib/)")
+if(NOT FAUST_LIB_DIR)
+    message(FATAL_ERROR "FAUST_LIB_DIR must be set to the path containing pre-built Faust libraries")
+endif()
 
-    set(FAUST_INCLUDE "${FAUST_SRC_DIR}/architecture")
-    set(FAUST_LIB "${FAUST_LIB_DIR}/lib")
+set(FAUST_INCLUDE "${FAUST_SRC_DIR}/architecture")
+set(FAUST_LIB "${FAUST_LIB_DIR}/lib")
 
-    message(STATUS "Using Faust headers from ${FAUST_INCLUDE}")
-    message(STATUS "Using Faust libraries from ${FAUST_LIB}")
+message(STATUS "Using Faust headers from ${FAUST_INCLUDE}")
+message(STATUS "Using Faust libraries from ${FAUST_LIB}")
 
-    target_include_directories(sc_faust PRIVATE ${FAUST_INCLUDE})
+target_include_directories(sc_faust PRIVATE ${FAUST_INCLUDE})
 
-    # Static linking with libfaustwithllvm.a (self-contained, no runtime dependency)
-    set(FAUST_STATIC_LIB "${FAUST_LIB}/libfaustwithllvm.a")
+set(FAUST_STATIC_LIB "${FAUST_LIB}/libfaustwithllvm.a")
 
-    # System libraries required by LLVM/Faust
-    find_package(Threads REQUIRED)
-    target_link_libraries(sc_faust
+find_package(Threads REQUIRED)
+target_link_libraries(sc_faust
         ${FAUST_STATIC_LIB}
         Threads::Threads
         dl
         z
         m
         ncurses
+)
+
+if (APPLE)
+    target_link_libraries(sc_faust
+        "-framework CoreServices"
+        "-framework CoreFoundation"
     )
-else()
-    # macOS: use system faust (e.g., from Homebrew)
-    if (NOT DEFINED FAUST)
-        set (FAUST faust)
-    endif()
-
-    message (STATUS "Using Faust as ${FAUST}")
-    execute_process (COMMAND ${FAUST} --includedir OUTPUT_VARIABLE FAUST_INCLUDE)
-    string ( STRIP "${FAUST_INCLUDE}" FAUST_INCLUDE )
-    message (STATUS "Using Faust include from ${FAUST_INCLUDE}")
-    execute_process (COMMAND ${FAUST} --libdir OUTPUT_VARIABLE FAUST_LIB)
-    string ( STRIP "${FAUST_LIB}" FAUST_LIB )
-    message (STATUS "Using Faust libraries from ${FAUST_LIB}")
-
-    target_include_directories(sc_faust PRIVATE ${FAUST_INCLUDE})
-
-    execute_process( COMMAND faust-config --system-libs OUTPUT_VARIABLE FC_OUTPUT RESULT_VARIABLE FC_RESULT)
-    string(REPLACE " " ";" FC_OUTPUT ${FC_OUTPUT})
-    string(STRIP "${FC_OUTPUT}" FC_OUTPUT)
-
-    set (FAUST_LIBS ${FC_OUTPUT} ${FAUST_LIB}/libOSCFaust.dylib ${FAUST_LIB}/libfaust.dylib ${FAUST_LIB}/libfaustmachine.dylib)
-    target_link_libraries (sc_faust ${FAUST_LIBS})
 endif()
 
-message (STATUS "Faust libs: ${FAUST_LIBS}")
+if(NOT UNIX)
+    message(FATAL_ERROR "Only macOS and linux is currently supported")
+endif()
 
 # install
 install(TARGETS sc_faust LIBRARY DESTINATION ${PROJECT_NAME})
