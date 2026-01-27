@@ -12,6 +12,7 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact-suffix: linux-x86-64
+            apt-dependencies: faust
           - os: macos-latest
             artifact-suffix: macos-arm64
             brew-dependencies: faust
@@ -40,13 +41,16 @@ jobs:
     - name: Install brew dependencies
       if: ${{ matrix.brew-dependencies }}
       run: brew install ${{ matrix.brew-dependencies }}
-    - name: Build faust linux
+    - name: Install apt dependencies
       if: ${{ matrix.os == 'ubuntu-latest' }}
       run: |
-        sudo apt-get update && sudo apt-get install -y llvm-dev
-        cd faust
-        make most
-        sudo make install
+        sudo apt-get update && sudo apt-get install -y faust
+    - name: Download faust
+      if: ${{ matrix.os == 'ubuntu-latest' }}
+      run: |
+        wget -O libfaust.zip https://github.com/grame-cncm/faust/releases/download/2.83.1/libfaust-ubuntu-x86_64.zip
+        mkdir libfaust
+        unzip libfaust.zip -d libfaust/
     - name: Build Plugin
       shell: bash
       run: |
@@ -54,6 +58,8 @@ jobs:
             -S . \
             -B build \
             -DSC_PATH=./supercollider \
+            -DFAUST_SRC_DIR=./faust \
+            -DFAUST_LIB_DIR=./libfaust \
             -DCMAKE_INSTALL_PREFIX=./install
         cmake --build build --config Release
         cmake --install build --config Release
