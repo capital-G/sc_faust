@@ -80,6 +80,7 @@ if(UNIX AND NOT APPLE)
         dl
         z
         m
+        ncurses
     )
 else()
     # macOS: use system faust (e.g., from Homebrew)
