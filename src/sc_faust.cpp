@@ -34,7 +34,8 @@ ScFaust::ScFaust() {
         return;
     }
 
-    mScRtUi = new SCRTUI(mWorld, node->numParams);
+    mScRtUi = static_cast<SCRTUI*>(RTAlloc(mWorld, sizeof(SCRTUI)));
+    mScRtUi->init(mWorld, node->numParams);
     mDsp = node->factory->createDSPInstance();
     mDsp->init(static_cast<int>(mWorld->mSampleRate));
     mDsp->buildUserInterface(mScRtUi);
