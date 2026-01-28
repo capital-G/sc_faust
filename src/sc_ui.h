@@ -65,12 +65,16 @@ protected:
     }
 
 public:
-    void init(World* world, int numParams) {
-        mWorld = world;
-        mParams = static_cast<float**>(RTAlloc(world, sizeof(float*) * numParams));
+    SCRTUI(World* world_, int numParams): mWorld(world_) {
+        mParams = static_cast<float**>(RTAlloc(mWorld, sizeof(float*) * numParams));
+        if (mParams == nullptr) {
+            return;
+        }
+        mSuccess = true;
     }
     ~SCRTUI() { RTFree(mWorld, mParams); }
 
+    bool mSuccess = false;
     float* getParam(const int num) { return mParams[num]; }
     // UI callbacks
     void openTabBox(const char* label) override {}
