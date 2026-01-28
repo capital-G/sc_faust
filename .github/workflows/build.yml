@@ -54,7 +54,6 @@ jobs:
             -S . \
             -B build \
             -DSC_PATH=./supercollider \
-            -DFAUST_SRC_DIR=./faust \
             -DFAUST_LIB_DIR=./libfaust \
             -DCMAKE_INSTALL_PREFIX=./install
         cmake --build build --config Release
