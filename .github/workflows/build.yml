@@ -44,7 +44,7 @@ jobs:
       run: |
         brew install sevenzip
         wget -q -O libfaust.dmg ${{ matrix.libfaust-dmg }}
-        7zz libfaust.dmg -o./libfaustraw
+        7zz x libfaust.dmg -o./libfaustraw
         mkdir libfaust
         mv libfaustraw/Faust-*/Faust-*/lib libfaust/lib
     - name: Build Plugin
