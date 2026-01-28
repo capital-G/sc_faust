@@ -7,6 +7,7 @@
 using namespace Library;
 
 CodeLibrary* gLibrary = nullptr;
+FaustMemoryManager* gFaustMemoryManager = nullptr;
 
 /*! @brief writes params to file, separated by $ */
 bool writeParamsToFile(const std::vector<ParamPair>& params, const std::string& filename) {
@@ -33,6 +34,7 @@ bool compileScript(World*, void* cmdData) {
     const auto target = std::string("");
     const char* argv[2] = { "-I", FAUST_LIBRARY_PATH };
     payload->factory = createDSPFactoryFromString("sc_faust", payload->code, 2, argv, target, errorMessage, -1);
+    payload->factory->setMemoryManager(gFaustMemoryManager);
 
     if (!errorMessage.empty()) {
         Print("ERROR: %s\n", errorMessage.c_str());
@@ -79,6 +81,11 @@ bool swapCode(World* world, void* cmdData) {
 
 namespace Library {
 void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr) {
+    // set the world for the faust memory manager once
+    if (gFaustMemoryManager == nullptr) {
+        gFaustMemoryManager = new FaustMemoryManager();
+        gFaustMemoryManager->world = world;
+    }
     auto payload = static_cast<CompileCodeCallbackPayload*>(RTAlloc(world, sizeof(CompileCodeCallbackPayload)));
     if (!payload) {
         Print("ERROR: Failed to allocate memory for compile code callback.\n");
