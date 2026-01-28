@@ -36,14 +36,14 @@ jobs:
     - name: Download faust zip
       if: ${{ matrix.libfaust-zip }}
       run: |
-        wget -O libfaust.zip ${{ matrix.libfaust-zip }} 
+        wget -q -O libfaust.zip ${{ matrix.libfaust-zip }} 
         mkdir libfaust
         unzip libfaust.zip -d libfaust/
     - name: Download faust dmg
       if: ${{ matrix.libfaust-dmg }}
       run: |
         brew install sevenzip
-        wget -O libfaust.dmg ${{ matrix.libfaust-dmg }}
+        wget -q -O libfaust.dmg ${{ matrix.libfaust-dmg }}
         7zz libfaust.dmg -o./libfaustraw
         mkdir libfaust
         mv libfaustraw/Faust-*/Faust-*/lib libfaust/lib
