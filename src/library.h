@@ -15,7 +15,7 @@ struct DSPFactory {
     bool shouldDelete = false;
     // number of instances using the factory. only delete
     // the dsp factory if this count is 0!
-    uint instanceCount = 0;
+    unsigned int instanceCount = 0;
 };
 
 /*! @brief a linked list of available DSP factories */

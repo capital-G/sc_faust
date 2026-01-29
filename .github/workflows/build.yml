@@ -20,8 +20,8 @@ jobs:
           - os: macos-15-intel
             artifact-suffix: macos-x86-64
             libfaust-dmg: https://github.com/grame-cncm/faust/releases/download/2.83.1/Faust-2.83.1-x64.dmg
-        #   - os: windows-2022
-        #     artifact-suffix: win-x86-64
+          - os: windows-2022
+            artifact-suffix: win-x86-64
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
@@ -47,6 +47,13 @@ jobs:
         7zz x libfaust.dmg -o./libfaustraw || true
         mkdir libfaust
         mv libfaustraw/Faust-*/Faust-*/lib libfaust/lib
+    - name: Install faust (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install faust -y
+        mkdir libfaust
+        cp -r "C:/Program Files/Faust/lib" libfaust/lib
+      shell: bash
     - name: Build Plugin
       shell: bash
       run: |

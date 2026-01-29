@@ -14,7 +14,7 @@ error "FAUST_LIBRARY_PATH must be defined by CMake"
 
 CodeLibrary* gLibrary = nullptr;
 FaustMemoryManager* gFaustMemoryManager = nullptr;
-uint gFactoryCounter = 0;
+unsigned int gFactoryCounter = 0;
 
 /*! @brief writes params to file, separated by $ */
 bool writeParamsToFile(const std::vector<ParamPair>& params, const std::string& filename) {
