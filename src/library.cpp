@@ -199,6 +199,24 @@ void free(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr) {
         Print("Error: Could not free Faust script with ID %d: not found\n", codeId);
         return;
     };
+    llvm_dsp_factory* factoryToBeDeleted = nullptr;
+    if (code->dspFactory) {
+        code->dspFactory->shouldDelete = true;
+        if (code->dspFactory->instanceCount == 0) {
+            factoryToBeDeleted = code->dspFactory->factory;
+        }
+    };
+    RTFree(world, code);
+    if (factoryToBeDeleted) {
+        ft->fDoAsynchronousCommand(
+            world, nullptr, nullptr, factoryToBeDeleted,
+            [](World*, void* cmdData) -> bool {
+                const auto factory = static_cast<llvm_dsp_factory*>(cmdData);
+                delete factory;
+                return false;
+            },
+            nullptr, nullptr, nullptr, 0, nullptr);
+    }
 }
 
 CodeLibrary* findEntry(const int hash) {
