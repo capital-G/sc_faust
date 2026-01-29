@@ -33,6 +33,7 @@ struct CompileCodeCallbackPayload {
     llvm_dsp* dspInstance;
     SCUI* scUi;
     int numOutputs;
+    int numParams;
 };
 
 /*! @brief takes an OSC message and compiles triggers an async compilation of the faust code */
@@ -43,3 +44,12 @@ void faustCompileScript(World* world, void* inUserData, sc_msg_iter* args, void*
  */
 CodeLibrary* findEntry(int hash);
 }
+
+/*! @brief faust memory manager which uses SC's RTalloc */
+struct FaustMemoryManager : public dsp_memory_manager {
+    World* world;
+
+    void* allocate(size_t size) override { return RTAlloc(world, size); }
+
+    void destroy(void* ptr) override { RTFree(world, ptr); }
+};

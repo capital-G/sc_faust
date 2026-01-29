@@ -54,20 +54,28 @@ public:
  */
 class SCRTUI : public UI {
 protected:
-    float** params;
+    float** mParams = nullptr;
+    World* mWorld = nullptr;
+
     int counter = 0;
 
     void add(float* zone) {
-        params[counter] = zone;
+        mParams[counter] = zone;
         counter++;
     }
 
 public:
-    SCRTUI(World* world, int numParams): params(nullptr), counter(0) {
-        params = static_cast<float**>(RTAlloc(world, sizeof(float*) * numParams));
-    };
+    SCRTUI(World* world_, int numParams): mWorld(world_) {
+        mParams = static_cast<float**>(RTAlloc(mWorld, sizeof(float*) * numParams));
+        if (mParams == nullptr) {
+            return;
+        }
+        mSuccess = true;
+    }
+    ~SCRTUI() { RTFree(mWorld, mParams); }
 
-    float* getParam(const int num) { return params[num]; }
+    bool mSuccess = false;
+    float* getParam(const int num) { return mParams[num]; }
     // UI callbacks
     void openTabBox(const char* label) override {}
     void openHorizontalBox(const char* label) override {};

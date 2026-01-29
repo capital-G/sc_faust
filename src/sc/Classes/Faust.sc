@@ -61,6 +61,7 @@ FaustDef {
 		});
 		hash = FaustDef.prHashSymbol(name);
 		res = super.newCopyArgs(name, hash, code ? "");
+		res.params = [];
 		all[name] = res;
 		FaustDef.prHashMap[hash] = res;
 		^res;

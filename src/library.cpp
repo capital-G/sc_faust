@@ -7,6 +7,8 @@
 using namespace Library;
 
 CodeLibrary* gLibrary = nullptr;
+FaustMemoryManager* gFaustMemoryManager = nullptr;
+uint gFactoryCounter = 0;
 
 /*! @brief writes params to file, separated by $ */
 bool writeParamsToFile(const std::vector<ParamPair>& params, const std::string& filename) {
@@ -30,9 +32,18 @@ bool compileScript(World*, void* cmdData) {
     auto payload = static_cast<CompileCodeCallbackPayload*>(cmdData);
 
     auto errorMessage = std::string();
-    const auto target = std::string("");
+    const auto target = std::string();
     const char* argv[2] = { "-I", FAUST_LIBRARY_PATH };
-    payload->factory = createDSPFactoryFromString("sc_faust", payload->code, 2, argv, target, errorMessage, -1);
+    // we need to modify the name app for each instance since faust is caching factories internally!
+    // We first use the stock/nrt memory manager to extract the parameter names of a script and then
+    // switch over to the RT memory manager which uses SC's RTAlloc.
+    // Since the cached dsp factory has already been set to use the RT memory (and we can not revert this
+    // since this is not thread safe!) we instead have to enforce the creation of a new DSP factory
+    // by using a custom name each time.
+    auto name_app = std::string("sc_faust");
+    name_app += std::to_string(gFactoryCounter);
+    gFactoryCounter += 1;
+    payload->factory = createDSPFactoryFromString(name_app, payload->code, 2, argv, target, errorMessage, -1);
 
     if (!errorMessage.empty()) {
         Print("ERROR: %s\n", errorMessage.c_str());
@@ -49,6 +60,12 @@ bool compileScript(World*, void* cmdData) {
 
     // Print("Faust script has %d params\n", payload->scUi->getNumParams());
     writeParamsToFile(payload->scUi->getParams(), payload->paramExchangePath);
+    payload->numParams = payload->scUi->getNumParams();
+    delete payload->dspInstance;
+    delete payload->scUi;
+
+    // from now on, use the SC RT memory manager
+    payload->factory->setMemoryManager(gFaustMemoryManager);
 
     return true;
 };
@@ -65,12 +82,13 @@ bool swapCode(World* world, void* cmdData) {
     auto* newNode = static_cast<Library::CodeLibrary*>(RTAlloc(world, sizeof(CodeLibrary)));
     if (!newNode) {
         Print("ERROR: RTAlloc failed to add item to the code library\n");
-        return false;
+        return true;
     }
     newNode->hash = payload->hash;
     newNode->factory = payload->factory;
     newNode->next = gLibrary;
     newNode->numOutputs = payload->numOutputs;
+    newNode->numParams = payload->numParams;
 
     gLibrary = newNode;
 
@@ -79,6 +97,11 @@ bool swapCode(World* world, void* cmdData) {
 
 namespace Library {
 void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr) {
+    // set the world for the faust memory manager once
+    if (gFaustMemoryManager == nullptr) {
+        gFaustMemoryManager = new FaustMemoryManager();
+        gFaustMemoryManager->world = world;
+    }
     auto payload = static_cast<CompileCodeCallbackPayload*>(RTAlloc(world, sizeof(CompileCodeCallbackPayload)));
     if (!payload) {
         Print("ERROR: Failed to allocate memory for compile code callback.\n");
@@ -91,6 +114,7 @@ void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr)
     payload->code = nullptr;
     payload->paramExchangePath = nullptr;
     payload->numOutputs = 0;
+    payload->numParams = 0;
     payload->hash = args->geti();
 
     const char* exchangePath = args->gets();
@@ -131,13 +155,7 @@ void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr)
     ft->fDoAsynchronousCommand(
         world, replyAddr,
         // @todo does cmdName leak? will it get freed by the server on its own?
-        cmdName, static_cast<void*>(payload), compileScript, swapCode,
-        [](World* world, void* cmdData) {
-            auto payload = static_cast<CompileCodeCallbackPayload*>(cmdData);
-            delete payload->scUi;
-            delete payload->dspInstance;
-            return true;
-        },
+        cmdName, static_cast<void*>(payload), compileScript, swapCode, nullptr,
         [](World* world, void* cmdData) {
             auto payload = static_cast<Library::CompileCodeCallbackPayload*>(cmdData);
             RTFree(world, payload->code);

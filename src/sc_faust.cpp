@@ -15,7 +15,7 @@ extern Library::CodeLibrary* gLibrary;
 
 ScFaust::ScFaust() {
     auto hash = static_cast<int>(in0(indices::hash));
-    mNumInputs = static_cast<int>(in0(indices::numInputs));
+    mNumFaustInputs = static_cast<int>(in0(indices::numInputs));
     mNumParams = static_cast<int>(in0(indices::numParams));
 
     set_calc_function<ScFaust, &ScFaust::next>();
@@ -34,24 +34,46 @@ ScFaust::ScFaust() {
         return;
     }
 
-    mScRtUi = new SCRTUI(mWorld, node->numParams);
+    void* mScRtUiLocation = RTAlloc(mWorld, sizeof(SCRTUI));
+    if (mScRtUiLocation == nullptr) {
+        Print("ERROR: Could not allocate memory for SCRTUI UI location\n");
+        return;
+    }
+    mScRtUi = new (mScRtUiLocation) SCRTUI(mWorld, node->numParams);
+    if (!mScRtUi->mSuccess) {
+        Print("ERROR: Could not allocate memory for SCRTUI parameters\n");
+        return;
+    }
     mDsp = node->factory->createDSPInstance();
     mDsp->init(static_cast<int>(mWorld->mSampleRate));
     mDsp->buildUserInterface(mScRtUi);
+
+    mParamOffsets = static_cast<int*>(RTAlloc(mWorld, sizeof(int) * mNumParams));
+    if (mParamOffsets == nullptr) {
+        Print("ERROR: Could not allocate memory for param offsets\n");
+        return;
+    }
+    for (int i = 0; i < mNumParams; i++) {
+        mParamOffsets[i] = static_cast<int>(in0(indices::inputs + mNumFaustInputs + (2 * i)));
+    }
+    mReady = true;
 }
 
 ScFaust::~ScFaust() {
-    delete mScRtUi;
+    if (mScRtUi != nullptr) {
+        mScRtUi->~SCRTUI();
+    }
+    RTFree(mWorld, mParamOffsets);
+    RTFree(mWorld, mScRtUi);
     delete mDsp;
 }
 
 
 void ScFaust::next(int numSamples) {
-    if (mDsp != nullptr) {
+    if (mDsp != nullptr && mReady) {
         for (int i = 0; i < mNumParams; i++) {
-            auto paramOffset = **(mInBuf + indices::inputs + mNumInputs + (i * 2));
-            auto param = mScRtUi->getParam(paramOffset);
-            *param = **(mInBuf + indices::inputs + mNumInputs + (i * 2) + 1);
+            auto param = mScRtUi->getParam(mParamOffsets[i]);
+            *param = **(mInBuf + indices::inputs + mNumFaustInputs + (2 * i) + 1);
         };
         mDsp->compute(numSamples, mInBuf + indices::inputs, mOutBuf);
     }
