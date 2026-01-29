@@ -193,30 +193,36 @@ void free(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr) {
         Print("Error: Invalid faust free message\n");
         return;
     }
-    const auto codeId = args->geti();
-    const auto code = findEntry(codeId);
-    if (code == nullptr) {
-        Print("Error: Could not free Faust script with ID %d: not found\n", codeId);
+    const auto nodeId = args->geti();
+    const auto node = findEntry(nodeId);
+    if (node == nullptr) {
+        Print("Error: Could not free Faust script with ID %d: not found\n", nodeId);
         return;
     };
-    llvm_dsp_factory* factoryToBeDeleted = nullptr;
-    if (code->dspFactory) {
-        code->dspFactory->shouldDelete = true;
-        if (code->dspFactory->instanceCount == 0) {
-            factoryToBeDeleted = code->dspFactory->factory;
+    if (node->dspFactory) {
+        node->dspFactory->shouldDelete = true;
+        if (node->dspFactory->instanceCount == 0) {
+            deleteDspFactory(world, node->dspFactory);
         }
     };
-    RTFree(world, code);
-    if (factoryToBeDeleted) {
-        ft->fDoAsynchronousCommand(
-            world, nullptr, nullptr, factoryToBeDeleted,
-            [](World*, void* cmdData) -> bool {
-                const auto factory = static_cast<llvm_dsp_factory*>(cmdData);
-                delete factory;
-                return false;
-            },
-            nullptr, nullptr, nullptr, 0, nullptr);
-    }
+    RTFree(world, node);
+}
+
+void deleteDspFactory(World* world, DSPFactory* factory) {
+    ft->fDoAsynchronousCommand(
+        world, nullptr, nullptr, factory,
+        [](World*, void* cmdData) -> bool {
+            const auto factoryToDelete = static_cast<DSPFactory*>(cmdData);
+            if (!deleteDSPFactory(factoryToDelete->factory)) {
+                Print("ERROR: Failed to delete DSP factory\n");
+            }
+            return true;
+        },
+        [](World* world, void* cmdData) -> bool {
+            RTFree(world, cmdData);
+            return false;
+        },
+        nullptr, [](World*, void*) {}, 0, nullptr);
 }
 
 CodeLibrary* findEntry(const int hash) {

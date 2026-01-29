@@ -40,9 +40,11 @@ ScFaust::ScFaust() {
         Print("ERROR: Could not allocate memory for SCRTUI parameters\n");
         return;
     }
-    mDsp = node->dspFactory->factory->createDSPInstance();
+    mDspFactory = node->dspFactory;
+    mDsp = mDspFactory->factory->createDSPInstance();
     mDsp->init(static_cast<int>(mWorld->mSampleRate));
     mDsp->buildUserInterface(mScRtUi);
+    mDspFactory->instanceCount += 1;
 
     mParamOffsets = static_cast<int*>(RTAlloc(mWorld, sizeof(int) * mNumParams));
     if (mParamOffsets == nullptr) {
@@ -62,6 +64,10 @@ ScFaust::~ScFaust() {
     RTFree(mWorld, mParamOffsets);
     RTFree(mWorld, mScRtUi);
     delete mDsp;
+    mDspFactory->instanceCount -= 1;
+    if (mDspFactory->instanceCount == 0 && mDspFactory->shouldDelete) {
+        Library::deleteDspFactory(mWorld, mDspFactory);
+    }
 }
 
 

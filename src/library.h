@@ -22,6 +22,8 @@ struct DSPFactory {
 struct CodeLibrary {
     CodeLibrary* next;
     int hash;
+    // this is wrapped as a pointer such that we can delete the code library
+    // while there are still units using the dsp factory.
     DSPFactory* dspFactory;
     int numParams;
     int numOutputs;
@@ -58,6 +60,9 @@ void setFaustLibPath(World* world, void* inUserData, sc_msg_iter* args, void* re
 /*! @brief removes a faust factory from the server. This may be deferred
  *  if there are still running instances. */
 void free(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr);
+
+/*! @brief deletes a DSP factory in the NRT thread. Call this only in RT context! */
+void deleteDspFactory(World* world, DSPFactory* factory);
 
 /*! @brief looks up the entry within the global code library. If the entry does not exist,
  *  it will return a nullptr.

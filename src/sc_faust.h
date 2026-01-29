@@ -1,5 +1,8 @@
 #pragma once
 
+#include "library.h"
+
+
 #include <SC_PlugIn.hpp>
 
 #include <faust/dsp/llvm-dsp.h>
@@ -31,4 +34,5 @@ private:
     int mNumParams;
     int* mParamOffsets = nullptr;
     bool mReady = false;
+    Library::DSPFactory* mDspFactory = nullptr;
 };

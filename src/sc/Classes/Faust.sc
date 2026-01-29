@@ -82,6 +82,20 @@ FaustDef {
 		code = File.readAllString(path.asAbsolutePath);
 	}
 
+	free {|server|
+		server = server ? Server.default;
+		server.sendMsg(*this.freeMsg);
+		all[name] = nil;
+	}
+
+	freeMsg {
+		^[
+			\cmd,
+			\faustfree,
+			hash,
+		];
+	}
+
 	*defaultLibPath {
 		^this.class.filenameSymbol.asString.dirname.dirname +/+ "externals" +/+ "faustlibs"
 	}
