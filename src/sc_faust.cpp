@@ -40,7 +40,7 @@ ScFaust::ScFaust() {
         Print("ERROR: Could not allocate memory for SCRTUI parameters\n");
         return;
     }
-    mDsp = node->factory->createDSPInstance();
+    mDsp = node->dspFactory->factory->createDSPInstance();
     mDsp->init(static_cast<int>(mWorld->mSampleRate));
     mDsp->buildUserInterface(mScRtUi);
 
@@ -84,4 +84,5 @@ PluginLoad("ScFaust") {
 
     ft->fDefinePlugInCmd("faustscript", Library::faustCompileScript, nullptr);
     ft->fDefinePlugInCmd("faustlibpath", Library::setFaustLibPath, nullptr);
+    ft->fDefinePlugInCmd("faustfree", Library::free, nullptr);
 }

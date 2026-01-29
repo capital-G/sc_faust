@@ -90,8 +90,17 @@ bool swapCode(World* world, void* cmdData) {
         Print("ERROR: RTAlloc failed to add item to the code library\n");
         return true;
     }
+    auto* dspFactory = static_cast<Library::DSPFactory*>(RTAlloc(world, sizeof(DSPFactory)));
+    if (!dspFactory) {
+        Print("ERROR: RTAlloc failed to create the dsp factory\n");
+        return true;
+    }
+    dspFactory->factory = payload->factory;
+    dspFactory->instanceCount = 0;
+    dspFactory->shouldDelete = false;
+
     newNode->hash = payload->hash;
-    newNode->factory = payload->factory;
+    newNode->dspFactory = dspFactory;
     newNode->next = gLibrary;
     newNode->numOutputs = payload->numOutputs;
     newNode->numParams = payload->numParams;
@@ -177,6 +186,19 @@ void setFaustLibPath(World*, void*, sc_msg_iter* args, void*) {
         return;
     }
     gFaustLibPath = libPath;
+}
+
+void free(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr) {
+    if (args->nextTag('f') != 'i') {
+        Print("Error: Invalid faust free message\n");
+        return;
+    }
+    const auto codeId = args->geti();
+    const auto code = findEntry(codeId);
+    if (code == nullptr) {
+        Print("Error: Could not free Faust script with ID %d: not found\n", codeId);
+        return;
+    };
 }
 
 CodeLibrary* findEntry(const int hash) {
