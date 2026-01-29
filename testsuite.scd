@@ -8,6 +8,8 @@
 		\testExcessiveOutputs,
 		\testTooFewOutputs,
 		\testWrongSyntax,
+		\testFree,
+		\testFreeAll,
 	],
 
 	testBasic: {
@@ -105,6 +107,72 @@
 		s.sync;
 		success = def.params.size == 0;
 		success;
+	},
+
+	testFree: {
+		var playSuccess = false;
+		var deleteSuccess = false;
+		var langSuccess = false;
+
+		var condition = Condition();
+
+		var script = FaustDef(\testFree, "process = 0.5;").send;
+		s.sync;
+		{
+			Faust.ar(1, script);
+		}.loadToFloatArray(0.1, action: {|sig|
+			playSuccess = (sig[0]-0.5).abs < 0.01;
+			condition.unhang;
+		});
+		condition.hang;
+
+		script.free;
+		s.sync;
+		langSuccess = FaustDef.all.keys.includes(\testFree).not;
+
+		s.sync;
+		{
+			Faust.ar(1, script);
+		}.loadToFloatArray(0.1, action: {|sig|
+			deleteSuccess = (sig[0]-0.0).abs < 0.01;
+			condition.unhang;
+		});
+		condition.hang;
+
+		playSuccess.and(deleteSuccess).and(langSuccess);
+	},
+
+	testFreeAll: {
+		var playSuccess = false;
+		var deleteSuccess = false;
+		var langSuccess = false;
+
+		var condition = Condition();
+
+		var script = FaustDef(\testFree, "process = 0.5;").send;
+		s.sync;
+		{
+			Faust.ar(1, script);
+		}.loadToFloatArray(0.1, action: {|sig|
+			playSuccess = (sig[0]-0.5).abs < 0.01;
+			condition.unhang;
+		});
+		condition.hang;
+
+		FaustDef.freeAll;
+		s.sync;
+		langSuccess = FaustDef.all.keys.includes(\testFree).not;
+
+		s.sync;
+		{
+			Faust.ar(1, script);
+		}.loadToFloatArray(0.1, action: {|sig|
+			deleteSuccess = (sig[0]-0.0).abs < 0.01;
+			condition.unhang;
+		});
+		condition.hang;
+
+		playSuccess.and(deleteSuccess).and(langSuccess);
 	},
 
 	// meta
