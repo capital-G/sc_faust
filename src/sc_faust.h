@@ -29,4 +29,6 @@ private:
     SCRTUI* mScRtUi = nullptr;
     int mNumFaustInputs;
     int mNumParams;
+    int* mParamOffsets = nullptr;
+    bool mReady = false;
 };
