@@ -76,6 +76,8 @@ void ScFaust::next(int numSamples) {
             *param = **(mInBuf + indices::inputs + mNumFaustInputs + (2 * i) + 1);
         };
         mDsp->compute(numSamples, mInBuf + indices::inputs, mOutBuf);
+    } else {
+        ClearUnitOutputs(this, mNumOutputs);
     }
 }
 
