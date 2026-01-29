@@ -29,18 +29,24 @@ FaustDef {
 			if(msg.size == 2, {
 				var doneMsg = msg[1].asString;
 				if(doneMsg.beginsWith("faust"), {
+					var paramString;
+					var params;
 					var hash = doneMsg.replace("faust", "").asInteger;
 					var res = FaustDef.prHashMap[hash];
 					var paramPath = FaustDef.prParamPath(hash);
-					var paramString = File.readAllString(paramPath);
-					var params = paramString.split($$);
-					// remove last empty param
-					params = params.keep(params.size-1);
-					// convert to symbol for lookup
-					res.params = params.collect({|p| p.asSymbol});
+					if(File.exists(paramPath).not, {
+						"FaustGen % was not successfully compiled".format(res.name).warn;
+					}, {
+						paramString = File.readAllString(paramPath);
+						params = paramString.split($$);
+						// remove last empty param
+						params = params.keep(params.size-1);
+						// convert to symbol for lookup
+						res.params = params.collect({|p| p.asSymbol});
 
-					//"Set faust params for %".format(res).postln;
-					File.delete(paramPath);
+						//"Set faust params for %".format(res).postln;
+						File.delete(paramPath);
+					});
 				});
 			});
 		};

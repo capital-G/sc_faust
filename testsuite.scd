@@ -7,6 +7,7 @@
 		\testFaustLib,
 		\testExcessiveOutputs,
 		\testTooFewOutputs,
+		\testWrongSyntax,
 	],
 
 	testBasic: {
@@ -95,6 +96,14 @@
 			condition.unhang;
 		});
 		condition.hang;
+		success;
+	},
+
+	testWrongSyntax: {
+		var success = false;
+		var def = FaustDef(\x, "process = ").send;
+		s.sync;
+		success = def.params.size == 0;
 		success;
 	},
 
