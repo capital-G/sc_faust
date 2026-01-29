@@ -85,11 +85,6 @@ bool swapCode(World* world, void* cmdData) {
         return true;
     }
 
-    auto* newNode = static_cast<Library::CodeLibrary*>(RTAlloc(world, sizeof(CodeLibrary)));
-    if (!newNode) {
-        Print("ERROR: RTAlloc failed to add item to the code library\n");
-        return true;
-    }
     auto* dspFactory = static_cast<Library::DSPFactory*>(RTAlloc(world, sizeof(DSPFactory)));
     if (!dspFactory) {
         Print("ERROR: RTAlloc failed to create the dsp factory\n");
@@ -99,13 +94,25 @@ bool swapCode(World* world, void* cmdData) {
     dspFactory->instanceCount = 0;
     dspFactory->shouldDelete = false;
 
-    newNode->hash = payload->hash;
-    newNode->dspFactory = dspFactory;
-    newNode->next = gLibrary;
-    newNode->numOutputs = payload->numOutputs;
-    newNode->numParams = payload->numParams;
+    auto node = Library::findEntry(payload->hash);
+    if (node == nullptr) {
+        node = static_cast<Library::CodeLibrary*>(RTAlloc(world, sizeof(CodeLibrary)));
+        if (!node) {
+            Print("ERROR: RTAlloc failed to add item to the code library\n");
+            return true;
+        }
+        node->hash = payload->hash;
+    } else {
+        node->dspFactory->shouldDelete = true;
+        Library::deleteDspFactory(world, node->dspFactory);
+    }
 
-    gLibrary = newNode;
+    node->dspFactory = dspFactory;
+    node->next = gLibrary;
+    node->numOutputs = payload->numOutputs;
+    node->numParams = payload->numParams;
+
+    gLibrary = node;
 
     return true;
 };
@@ -226,6 +233,9 @@ void freeNodeCallback(World* world, void* inUserData, sc_msg_iter* args, void* r
 }
 
 void deleteDspFactory(World* world, DSPFactory* factory) {
+    if (factory->instanceCount > 0) {
+        return;
+    }
     ft->fDoAsynchronousCommand(
         world, nullptr, nullptr, factory,
         [](World*, void* cmdData) -> bool {
