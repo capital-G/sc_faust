@@ -39,6 +39,11 @@ struct CompileCodeCallbackPayload {
 /*! @brief takes an OSC message and compiles triggers an async compilation of the faust code */
 void faustCompileScript(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr);
 
+/*! @brief sets gFaustLibPath which is the location of the faust library.
+ *  This is NOT RT safe but this should not be expected to be set regularly and while the sounds run.
+ */
+void setFaustLibPath(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr);
+
 /*! @brief looks up the entry within the global code library. If the entry does not exist,
  *  it will return a nullptr.
  */

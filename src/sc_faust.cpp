@@ -5,11 +5,7 @@
 #include <fstream>
 #include <iostream>
 
-#ifndef FAUST_LIBRARY_PATH
-error "FAUST_LIBRARY_PATH must be defined by CMake"
-#endif
-
-    InterfaceTable* ft;
+InterfaceTable* ft;
 
 extern Library::CodeLibrary* gLibrary;
 
@@ -87,4 +83,5 @@ PluginLoad("ScFaust") {
     registerUnit<ScFaust>(inTable, "Faust", false);
 
     ft->fDefinePlugInCmd("faustscript", Library::faustCompileScript, nullptr);
+    ft->fDefinePlugInCmd("faustlibpath", Library::setFaustLibPath, nullptr);
 }

@@ -82,6 +82,25 @@ FaustDef {
 		code = File.readAllString(path.asAbsolutePath);
 	}
 
+	*defaultLibPath {
+		^this.class.filenameSymbol.asString.dirname.dirname +/+ "externals" +/+ "faustlibs"
+	}
+
+	*libPath {|path, server|
+		path = path ? this.defaultLibPath;
+		server = server ? Server.default;
+		"Set Faust Library path to %".format(path).postln;
+		server.sendMsg(*this.libPathMsg(path));
+	}
+
+	*libPathMsg {|path|
+		^[
+			\cmd,
+			\faustlibpath,
+			path.asString,
+		]
+	}
+
 	send {|server, completionMsg|
 		var servers = (server ?? { Server.allBootedServers }).asArray;
 		servers.do { |each|

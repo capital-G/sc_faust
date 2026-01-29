@@ -6,6 +6,12 @@
 
 using namespace Library;
 
+#ifndef FAUST_LIBRARY_PATH
+error "FAUST_LIBRARY_PATH must be defined by CMake"
+#endif
+
+    std::string gFaustLibPath = FAUST_LIBRARY_PATH;
+
 CodeLibrary* gLibrary = nullptr;
 FaustMemoryManager* gFaustMemoryManager = nullptr;
 uint gFactoryCounter = 0;
@@ -33,7 +39,7 @@ bool compileScript(World*, void* cmdData) {
 
     auto errorMessage = std::string();
     const auto target = std::string();
-    const char* argv[2] = { "-I", FAUST_LIBRARY_PATH };
+    const char* argv[2] = { "-I", gFaustLibPath.c_str() };
     // we need to modify the name app for each instance since faust is caching factories internally!
     // We first use the stock/nrt memory manager to extract the parameter names of a script and then
     // switch over to the RT memory manager which uses SC's RTAlloc.
@@ -163,6 +169,10 @@ void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr)
             RTFree(world, payload);
         },
         0, nullptr);
+}
+void setFaustLibPath(World*, void*, sc_msg_iter* args, void*) {
+    const char* libPath = args->gets();
+    gFaustLibPath = libPath;
 }
 
 CodeLibrary* findEntry(const int hash) {
