@@ -172,6 +172,10 @@ void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr)
 }
 void setFaustLibPath(World*, void*, sc_msg_iter* args, void*) {
     const char* libPath = args->gets();
+    if (!libPath) {
+        Print("Error: Invalid set faust lib message\n");
+        return;
+    }
     gFaustLibPath = libPath;
 }
 
