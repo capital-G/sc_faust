@@ -47,7 +47,11 @@ target_include_directories(sc_faust PUBLIC ${SC_PATH}/include/common)
 target_include_directories(sc_faust PUBLIC ${SC_PATH}/common)
 
 # Faust part
-set (CMAKE_CXX_FLAGS_RELEASE "-O3")
+if(MSVC)
+    set(CMAKE_CXX_FLAGS_RELEASE "/O2")
+else()
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+endif()
 
 set(FAUST_SRC_DIR "${CMAKE_SOURCE_DIR}/external/faust" CACHE PATH "Path to Faust source repository")
 
@@ -64,27 +68,34 @@ message(STATUS "Using Faust libraries from ${FAUST_LIB}")
 
 target_include_directories(sc_faust PRIVATE ${FAUST_INCLUDE})
 
-set(FAUST_STATIC_LIB "${FAUST_LIB}/libfaustwithllvm.a")
-
 find_package(Threads REQUIRED)
-target_link_libraries(sc_faust
+
+if(WIN32)
+    set(FAUST_STATIC_LIB "${FAUST_LIB}/libfaustwithllvm.lib")
+    target_link_libraries(sc_faust
+        ${FAUST_STATIC_LIB}
+        Threads::Threads
+        ws2_32
+        ole32
+        uuid
+    )
+else()
+    set(FAUST_STATIC_LIB "${FAUST_LIB}/libfaustwithllvm.a")
+    target_link_libraries(sc_faust
         ${FAUST_STATIC_LIB}
         Threads::Threads
         dl
         z
         m
         ncurses
-)
+    )
+endif()
 
-if (APPLE)
+if(APPLE)
     target_link_libraries(sc_faust
         "-framework CoreServices"
         "-framework CoreFoundation"
     )
-endif()
-
-if(NOT UNIX)
-    message(FATAL_ERROR "Only macOS and linux is currently supported")
 endif()
 
 # install
