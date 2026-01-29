@@ -59,7 +59,7 @@ void setFaustLibPath(World* world, void* inUserData, sc_msg_iter* args, void* re
 
 /*! @brief removes a faust factory from the server. This may be deferred
  *  if there are still running instances. */
-void free(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr);
+void freeNodeCallback(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr);
 
 /*! @brief deletes a DSP factory in the NRT thread. Call this only in RT context! */
 void deleteDspFactory(World* world, DSPFactory* factory);

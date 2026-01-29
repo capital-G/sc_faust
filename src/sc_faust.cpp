@@ -64,9 +64,11 @@ ScFaust::~ScFaust() {
     RTFree(mWorld, mParamOffsets);
     RTFree(mWorld, mScRtUi);
     delete mDsp;
-    mDspFactory->instanceCount -= 1;
-    if (mDspFactory->instanceCount == 0 && mDspFactory->shouldDelete) {
-        Library::deleteDspFactory(mWorld, mDspFactory);
+    if (mDspFactory != nullptr) {
+        mDspFactory->instanceCount -= 1;
+        if (mDspFactory->instanceCount == 0 && mDspFactory->shouldDelete) {
+            Library::deleteDspFactory(mWorld, mDspFactory);
+        }
     }
 }
 
@@ -90,5 +92,5 @@ PluginLoad("ScFaust") {
 
     ft->fDefinePlugInCmd("faustscript", Library::faustCompileScript, nullptr);
     ft->fDefinePlugInCmd("faustlibpath", Library::setFaustLibPath, nullptr);
-    ft->fDefinePlugInCmd("faustfree", Library::free, nullptr);
+    ft->fDefinePlugInCmd("faustfree", Library::freeNodeCallback, nullptr);
 }

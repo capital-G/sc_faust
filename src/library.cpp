@@ -188,7 +188,30 @@ void setFaustLibPath(World*, void*, sc_msg_iter* args, void*) {
     gFaustLibPath = libPath;
 }
 
-void free(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr) {
+void freeNode(World* world, CodeLibrary* node) {
+    auto curNode = gLibrary;
+    CodeLibrary* prevNode = nullptr;
+
+    while (curNode != nullptr && curNode->hash != node->hash) {
+        prevNode = curNode;
+        curNode = curNode->next;
+    }
+    if (prevNode != nullptr) {
+        prevNode->next = node->next;
+    } else {
+        gLibrary = node->next;
+    }
+
+    if (node->dspFactory) {
+        node->dspFactory->shouldDelete = true;
+        if (node->dspFactory->instanceCount == 0) {
+            deleteDspFactory(world, node->dspFactory);
+        }
+    };
+    RTFree(world, node);
+}
+
+void freeNodeCallback(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr) {
     if (args->nextTag('f') != 'i') {
         Print("Error: Invalid faust free message\n");
         return;
@@ -199,13 +222,7 @@ void free(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr) {
         Print("Error: Could not free Faust script with ID %d: not found\n", nodeId);
         return;
     };
-    if (node->dspFactory) {
-        node->dspFactory->shouldDelete = true;
-        if (node->dspFactory->instanceCount == 0) {
-            deleteDspFactory(world, node->dspFactory);
-        }
-    };
-    RTFree(world, node);
+    freeNode(world, node);
 }
 
 void deleteDspFactory(World* world, DSPFactory* factory) {
