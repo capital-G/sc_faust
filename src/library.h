@@ -61,6 +61,9 @@ void setFaustLibPath(World* world, void* inUserData, sc_msg_iter* args, void* re
  *  if there are still running instances. */
 void freeNodeCallback(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr);
 
+/*! @brief remove all faust factories from the server by using `freeNodeCallback` */
+void freeAllCallback(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr);
+
 /*! @brief deletes a DSP factory in the NRT thread. Call this only in RT context! */
 void deleteDspFactory(World* world, DSPFactory* factory);
 

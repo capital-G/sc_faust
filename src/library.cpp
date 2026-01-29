@@ -232,6 +232,15 @@ void freeNodeCallback(World* world, void* inUserData, sc_msg_iter* args, void* r
     freeNode(world, node);
 }
 
+void freeAllCallback(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr) {
+    auto node = gLibrary;
+    while (node != nullptr) {
+        freeNode(world, node);
+        node = node->next;
+    }
+    gLibrary = nullptr;
+}
+
 void deleteDspFactory(World* world, DSPFactory* factory) {
     if (factory->instanceCount > 0) {
         return;
