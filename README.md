@@ -2,6 +2,43 @@
 
 SC Faust is a server extensions which allows to compile [Faust](https://faust.grame.fr/) code on a SuperCollider server and use this compiled code as a UGen.
 
+## Example
+
+Before a Faust UGen can be used, it needs to be registered and compiled on the server.
+Here is an example in which the input will be fed into a JPVerb and it's `t60` parameter will be exposed and controllable
+
+```supercollider
+(
+FaustDef(\jp, "
+import(\"stdfaust.lib\");
+re = library(\"reverbs.lib\");
+
+t60 = hslider(\"t60\", 3.0, 0, 10.0, 0.01);
+
+process = re.jpverb(t60, 0.2, 1.0, 0.8, 0.3, 0.4, 0.9, 0.8, 0.7, 500, 10000);
+").send;
+)
+```
+
+Once the faust code has been compiled, it can be used via the `Faust` UGen.
+
+```supercollider
+(
+Ndef(\jp, {
+    var sig = SinOscFB.ar(SinOscFB.kr(0.03*[1.0, 1.01], 2.3).exprange(100, 10000), [1.3, 1.4]) * SinOscFB.kr([1.4, 1.3], 1.3);
+    sig = sig * Env.perc(releaseTime: LFDNoise3.kr(0.5).exprange(0.01, 0.5)).kr(gate: Impulse.kr(2.0, [0, 1/2]));
+    Faust.ar(
+        numOutputs: 2,
+        script: \jp,
+        inputs: sig,
+        params: [
+            t60: \t60.kr(2.0, spec: [0.01, 10.0]
+        ),
+    ]) * \amp.kr(0.2);
+}).play.gui;
+)
+```
+
 ## Installation
 
 Builds are made available via <https://github.com/capital-G/sc_faust/releases>.
