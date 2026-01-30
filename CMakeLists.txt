@@ -22,7 +22,6 @@ set(SC_INSTALL_DIR "${SC_INSTALL_DIR_DEFAULT}" CACHE PATH "SuperCollider Extensi
 message(STATUS "SC_INSTALL_DIR: ${SC_INSTALL_DIR}")
 
 # faust libraries
-file (GLOB DSPLIBS external/faustlibraries/*.lib)
 
 add_library(sc_faust MODULE
         src/sc_faust.cpp
@@ -34,12 +33,11 @@ target_compile_definitions(sc_faust PRIVATE
     FAUST_LIBRARY_PATH="${SC_INSTALL_DIR}/${PROJECT_NAME}/externals/faustlibs"
 )
 
-# Copy faust libraries to build directory during build
+# Copy faust libraries to build directory at configure time
 set(FAUSTLIBS_BUILD_DIR "${CMAKE_BINARY_DIR}/externals/faustlibs")
-file(MAKE_DIRECTORY ${FAUSTLIBS_BUILD_DIR})
-add_custom_command(TARGET sc_faust POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DSPLIBS} ${FAUSTLIBS_BUILD_DIR}
-    COMMENT "Copying Faust libraries to build directory"
+file(COPY ${CMAKE_SOURCE_DIR}/external/faust/libraries/
+    DESTINATION ${FAUSTLIBS_BUILD_DIR}
+    FILES_MATCHING PATTERN "*.lib"
 )
 
 target_include_directories(sc_faust PUBLIC ${SC_PATH}/include/plugin_interface)
@@ -107,7 +105,9 @@ file(GLOB_RECURSE SC_FILES "${CMAKE_SOURCE_DIR}/src/sc/Classes/*.sc")
 file(GLOB_RECURSE SCHELP_FILES "${CMAKE_SOURCE_DIR}/src/sc/HelpSource/*/**")
 install(FILES ${SC_FILES} DESTINATION ${INSTALL_DIR}/Classes)
 install(DIRECTORY src/sc/HelpSource DESTINATION ${INSTALL_DIR})
-install(FILES ${DSPLIBS} DESTINATION ${INSTALL_DIR}/externals/faustlibs)
+install(DIRECTORY external/faust/libraries/
+    DESTINATION ${INSTALL_DIR}/externals/faustlibs
+    FILES_MATCHING PATTERN "*.lib"
+)
 install(FILES "README.md" "LICENSE" DESTINATION "${INSTALL_DIR}")
 
-message( STATUS "DSP LIBS IS ${DSPLIBS}")
