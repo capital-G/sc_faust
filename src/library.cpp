@@ -235,9 +235,11 @@ void freeNodeCallback(World* world, void* inUserData, sc_msg_iter* args, void* r
 
 void freeAllCallback(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr) {
     auto node = gLibrary;
+    CodeLibrary* nextNode = nullptr;
     while (node != nullptr) {
+        nextNode = node->next;
         freeNode(world, node);
-        node = node->next;
+        node = nextNode;
     }
     gLibrary = nullptr;
 }
