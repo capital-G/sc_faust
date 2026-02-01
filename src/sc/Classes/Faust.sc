@@ -99,7 +99,7 @@ FaustDef {
 	*freeAll {|server|
 		server = server ? Server.default;
 		server.sendMsg(*this.freeAllMsg);
-		all = [];
+		all = IdentityDictionary();
 	}
 
 	*freeAllMsg {
