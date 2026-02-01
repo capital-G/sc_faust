@@ -8,6 +8,12 @@ Before a Faust UGen can be used, it needs to be registered and compiled on the s
 Here is an example in which the input will be fed into a JPVerb and it's `t60` parameter will be exposed and controllable
 
 ```supercollider
+// start the server
+s.boot;
+// init the faust compiler
+FaustDef.init;
+
+// define a faust snippet 
 (
 FaustDef(\jp, "
 import(\"stdfaust.lib\");

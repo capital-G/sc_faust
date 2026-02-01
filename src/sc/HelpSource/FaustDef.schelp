@@ -12,6 +12,15 @@ The code can be updated in a LINK::Classes/SynthDef:: like manner: Running LINK:
 
 CLASSMETHODS::
 
+METHOD:: init
+Initiates the Faust compiler on the server by sending the server the path of the Faust libraries.
+This is an async operation.
+argument:: path
+Absolute path to the faust libraries which contains the files like CODE::stdfaust.lib::.
+Defaults to LINK::#*defaultLibPath::.
+argument:: server
+Falls back to LINK::Classes/Server#*default:: if not provided.
+
 METHOD:: new
 Creates a new FaustDef on the client side.
 argument:: name
@@ -28,14 +37,6 @@ Absolute path to the file containing the Faust code.
 
 METHOD:: all
 An LINK::Classes/IdentityDictionary:: of all registered Faust instances on the client.
-
-METHOD:: libPath
-Sets the path of the Faust libraries.
-This becomes necessary when the Faust UGen is not installed in its default location.
-argument:: path
-Absolute path to the faust libraries which contains the files like CODE::stdfaust.lib::.
-argument:: server
-Falls back to LINK::Classes/Server#*default:: if not provided.
 
 METHOD:: defaultLibPath
 Path to the bundled Faust libraries of this extension.

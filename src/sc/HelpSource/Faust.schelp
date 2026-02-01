@@ -15,9 +15,27 @@ After the LINK::FaustDef:: instance has been sent to the server, the code will b
 
 For further information and resources about the programming language, please take a look at their official website at https://faust.grame.fr/ .
 
+SUBSECTION:: Setup
+
+Before sending the first Faust script to the server it is necessary to boot the server and set the path of the faust library files.
+Since the absolute path to LINK::Classes/Platform#*userExtensionDir:: is different for each user, it is also necessary that the client tells the server where these files are located.
+
+CODE::
+s.boot;
+// the path to the faustlib files
+FaustDef.defaultLibPath;
+// this will tell the server the location of the files - it defaults to FaustDef.defaultLibPath
+FaustDef.init;
+::
+
 SUBSECTION:: Output
 
-First register Faust code on the server using
+NOTE::
+This guide uses LINK::Classes/Ndef:: to spawn synth instances, but it is also possible to use Faust within a LINK::Classes/SynthDef:: or a LINK::Classes/Function::.
+::
+
+Compiling a Faust snippet on the server becomes then as easy as
+
 CODE::
 FaustDef(\x, "process = 0.5;").send;
 ::

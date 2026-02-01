@@ -53,6 +53,13 @@ FaustDef {
 		thisProcess.addOSCRecvFunc(recvFunc);
 	}
 
+	*init {|path, server|
+		path = path ? this.defaultLibPath;
+		server = server ? Server.default;
+		"Set Faust Library path to %".format(path).postln;
+		server.sendMsg(*this.libPathMsg(path));
+	}
+
 	*new {|name, code|
 		var res;
 		var hash;
@@ -111,13 +118,6 @@ FaustDef {
 
 	*defaultLibPath {
 		^this.class.filenameSymbol.asString.dirname.dirname +/+ "externals" +/+ "faustlibs"
-	}
-
-	*libPath {|path, server|
-		path = path ? this.defaultLibPath;
-		server = server ? Server.default;
-		"Set Faust Library path to %".format(path).postln;
-		server.sendMsg(*this.libPathMsg(path));
 	}
 
 	*libPathMsg {|path|
