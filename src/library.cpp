@@ -102,17 +102,16 @@ bool swapCode(World* world, void* cmdData) {
             return true;
         }
         node->hash = payload->hash;
+        node->next = gLibrary;
+        gLibrary = node;
     } else {
         node->dspFactory->shouldDelete = true;
         Library::deleteDspFactory(world, node->dspFactory);
     }
 
     node->dspFactory = dspFactory;
-    node->next = gLibrary;
     node->numOutputs = payload->numOutputs;
     node->numParams = payload->numParams;
-
-    gLibrary = node;
 
     return true;
 };
