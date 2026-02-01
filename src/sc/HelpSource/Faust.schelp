@@ -5,6 +5,10 @@ related:: Classes/FaustGen
 
 DESCRIPTION::
 
+NOTE::
+This project has kindly been sponsored by GRAME.
+::
+
 Faust is a functional programming language for implementing signal process algorithms.
 In order to run Faust code on the SuperCollider server it is first necessary to register the code with a name using LINK::Classes/FaustDef::.
 After the LINK::FaustDef:: instance has been sent to the server, the code will be compiled and will become accessible via Faust.

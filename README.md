@@ -84,6 +84,10 @@ You can override the installation path by setting the `SC_INSTALL_DIR` variable.
 
 Please install [`pre-commit`](https://pre-commit.com/) and run `pre-commit install` to make sure that all commits are formatted according to the clang-format rules.
 
+## Acknowledgement
+
+This project has kindly been sponsored by [GRAME](https://www.grame.fr/).
+
 ## License
 
 Faust is licensed via GPL-2.0
