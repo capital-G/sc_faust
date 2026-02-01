@@ -1,7 +1,7 @@
 TITLE:: Faust
 summary:: A UGen to run a Faust DSP
 categories:: UGens>Dynamic
-related:: Classes/FaustGen
+related:: Classes/FaustDef
 
 DESCRIPTION::
 
