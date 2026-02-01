@@ -171,6 +171,7 @@ void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr)
         RTFree(world, payload->code);
         RTFree(world, payload->paramExchangePath);
         RTFree(world, payload);
+        return;
     }
     snprintf(cmdName, 18, "faust%d", payload->hash);
 
