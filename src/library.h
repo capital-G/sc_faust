@@ -39,12 +39,6 @@ struct CompileCodeCallbackPayload {
     // gets created in stage 2 and moved in stage 3
     // to the CodeLibrary.
     llvm_dsp_factory* factory;
-    // necessary to create such we can create a mapping of
-    // paramName -> position for the client via an OSC message
-    // which will get created in stage 3.
-    // This gets filled in stage 2 which is NRT, and freed again in stage 4.
-    llvm_dsp* dspInstance;
-    SCUI* scUi;
     int numOutputs;
     int numParams;
 };

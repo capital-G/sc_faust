@@ -59,16 +59,16 @@ bool compileScript(World*, void* cmdData) {
     // Print("Compiled %d successfully\n", payload->hash);
 
     // create an instance so we can obtain the parameters
-    payload->dspInstance = payload->factory->createDSPInstance();
-    payload->scUi = new SCUI();
-    payload->dspInstance->buildUserInterface(payload->scUi);
-    payload->numOutputs = payload->dspInstance->getNumOutputs();
+    auto dspInstance = payload->factory->createDSPInstance();
+    auto scUi = new SCUI();
+    dspInstance->buildUserInterface(scUi);
+    payload->numOutputs = dspInstance->getNumOutputs();
 
     // Print("Faust script has %d params\n", payload->scUi->getNumParams());
-    writeParamsToFile(payload->scUi->getParams(), payload->paramExchangePath);
-    payload->numParams = payload->scUi->getNumParams();
-    delete payload->dspInstance;
-    delete payload->scUi;
+    writeParamsToFile(scUi->getParams(), payload->paramExchangePath);
+    payload->numParams = scUi->getNumParams();
+    delete dspInstance;
+    delete scUi;
 
     // from now on, use the SC RT memory manager
     payload->factory->setMemoryManager(gFaustMemoryManager);
@@ -129,9 +129,7 @@ void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr)
         return;
     }
     // init payload such that we do nat have dangling pointers
-    payload->dspInstance = nullptr;
     payload->factory = nullptr;
-    payload->scUi = nullptr;
     payload->code = nullptr;
     payload->paramExchangePath = nullptr;
     payload->numOutputs = 0;
