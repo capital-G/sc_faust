@@ -142,6 +142,10 @@ process = re.jpverb(t60, 0.2, 1.0, 0.8, 0.3, 0.4, 0.9, 0.8, 0.7, 500, 10000);
 )
 ::
 
+NOTE::
+The error message CODE:: ERROR: unable to open file stdfaust.lib:: appears if the faust library path has not been set prior via LINK::Classes/FaustDef#*init::.
+::
+
 CODE::
 (
 Ndef(\jp, {
