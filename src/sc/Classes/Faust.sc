@@ -1,3 +1,24 @@
+FaustParam {
+	var <name;
+	var <spec;
+
+	*new {|name, spec|
+		^this.newCopyArgs(
+			name,
+			spec,
+		);
+	}
+
+	asNamedControl {
+		^NamedControl(
+			name: name.asSymbol,
+			values: spec.default,
+			rate: \control,
+			spec: spec,
+		);
+	}
+}
+
 FaustDef {
 	classvar <all;
 	var <name;
@@ -37,13 +58,7 @@ FaustDef {
 					if(File.exists(paramPath).not, {
 						"FaustGen % was not successfully compiled".format(res.name).warn;
 					}, {
-						paramString = File.readAllString(paramPath);
-						params = paramString.split($$);
-						// remove last empty param
-						params = params.keep(params.size-1);
-						// convert to symbol for lookup
-						res.params = params.collect({|p| p.asSymbol});
-
+						res.params = FaustDef.prReadParamsFile(paramPath);
 						//"Set faust params for %".format(res).postln;
 						File.delete(paramPath);
 					});
@@ -87,6 +102,14 @@ FaustDef {
 
 	load {|path|
 		code = File.readAllString(path.asAbsolutePath);
+	}
+
+	paramMap {
+		var arr = [];
+		params.do({|param|
+			arr = arr.add(param.name).add(param.asNamedControl);
+		});
+		^arr;
 	}
 
 	free {|server|
@@ -209,7 +232,7 @@ FaustDef {
 	prTranslateParameters {|parameters|
 		var newParameters = [];
 		parameters.pairsDo({|param, value|
-			var index = params.indexOf(param.asSymbol);
+			var index = params.selectIndices({|item| item.name == param.asSymbol;}).first;
 			if(index.notNil, {
 				newParameters = newParameters.add(index).add(value);
 			}, {
@@ -231,6 +254,23 @@ FaustDef {
 
 	*prParamPath {|hash|
 		^Platform.defaultTempDir +/+ "faust%".format(hash);
+	}
+
+	*prReadParamsFile {|path|
+		var paramString = File.readAllString(path);
+		var params = paramString.split($\n).drop(-1);
+		^params.collect({|pstring|
+			var entities = pstring.split($\$);
+			FaustParam(
+				name: entities[0].asSymbol,
+				spec: ControlSpec(
+					minval: entities[2].asFloat,
+					maxval: entities[3].asFloat,
+					step: entities[4].asFloat,
+					default: entities[1].asFloat,
+				)
+			);
+		});
 	}
 }
 

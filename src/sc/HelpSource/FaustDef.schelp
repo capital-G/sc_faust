@@ -85,7 +85,7 @@ METHOD:: code
 Faust code registered to this instance.
 
 METHOD:: params
-An LINK::Classes/Array:: which stores the extracted parameters of the Faust script.
+An LINK::Classes/Array:: of LINK::Classes/FaustParam::, which stores the LINK::Classes/Symbol:: and a matching LINK::Classes/ControlSpec:: of the extracted parameters of the script.
 Since the server is in charge of compiling the Faust script, the server also has to notify the client which parameters are present in the code.
 The parameters array will therefore be only be populated after CODE::send:: has been performed.
 
@@ -94,6 +94,9 @@ The params array is necessary as it provides the necessary offsets for the param
 NOTE::
 This should not be modified by the user since it can lead to crashes of the server.
 ::
+
+METHOD:: paramMap
+An LINK::Classes/Array:: which represents the extracted parameters of the faust script as tuples of LINK::Classes/Symbol:: and LINK::Classes/ControlName:: with a matching LINK::Classes/ControlSpec::.
 
 METHOD:: free
 Unregisters the script from the server and from the client.

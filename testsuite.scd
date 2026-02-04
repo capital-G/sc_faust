@@ -11,6 +11,7 @@
 		\testFree,
 		\testFreeAll,
 		\testSendFile,
+		\testControlSpec,
 	],
 
 	testBasic: {
@@ -192,6 +193,24 @@
 		success;
 	},
 
+	testControlSpec: {
+		var success = false;
+		var param;
+		var def = FaustDef(\testControl, "process = hslider(\"foo\",0,0,1,0.1);").send;
+		s.sync;
+		param = def.params[0];
+		success = (param.name.asSymbol == \foo).and(
+			param.spec.minval == 0.0
+		).and(
+			param.spec.maxval == 1.0
+		).and(
+			param.spec.default == 0.0
+		).and(
+			param.spec.step == 0.1
+		);
+		success;
+	},
+
 	// meta
 
 	run: {|self, name=nil|
@@ -208,7 +227,6 @@
 		}, {
 			"All tests ran successfully!".postln;
 		});
-
 	},
 )
 )

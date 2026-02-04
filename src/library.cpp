@@ -17,7 +17,7 @@ FaustMemoryManager* gFaustMemoryManager = nullptr;
 unsigned int gFactoryCounter = 0;
 
 /*! @brief writes params to file, separated by $ */
-bool writeParamsToFile(const std::vector<ParamPair>& params, const std::string& filename) {
+bool writeParamsToFile(const std::vector<FaustParam>& params, const std::string& filename) {
     std::ofstream outFile(filename);
 
     if (!outFile) {
@@ -25,8 +25,9 @@ bool writeParamsToFile(const std::vector<ParamPair>& params, const std::string& 
         return false;
     }
 
-    for (const auto& [param, _] : params) {
-        outFile << param << "$";
+    for (const auto& param : params) {
+        outFile << param.name << "$" << param.initValue << "$" << param.minValue << "$" << param.maxValue << "$"
+                << param.stepValue << std::endl;
     }
     outFile.close();
     // Print("Writing to file %s\n", filename.c_str());

@@ -108,6 +108,20 @@ Ndef(\faustParam, {
 Ndef(\faustParam).clear;
 ::
 
+It is also possible to use the extracted parameters via LINK::Classes/FaustDef#-paramMap:: directly
+
+CODE::
+(
+Ndef(\faustParam, {
+	Faust.ar(
+		numOutputs: 1,
+		script: \faustParam,
+		params: FaustDef(\faustParam).paramMap,
+	).poll;
+}).gui;
+)
+::
+
 SUBSECTION:: Libraries
 
 All default libraries of Faust are available.
@@ -145,6 +159,27 @@ Ndef(\jp, {
 )
 ::
 
+Another example which demonstrates the parameter extraction of LINK::Classes/FaustDef#-paramMap::
+
+CODE::
+(
+~brass = FaustDef(\brass, "
+import(\"stdfaust.lib\");
+
+process = pm.brass_ui <: _,_;
+").send;
+)
+::
+
+CODE::
+(
+Ndef(\brass, {
+	Faust.ar(2, ~brass, params: ~brass.paramMap) * 0.2;
+}).play.gui;
+)
+
+Ndef.clear;
+::
 
 CLASSMETHODS::
 
