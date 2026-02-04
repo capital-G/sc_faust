@@ -10,6 +10,7 @@
 		\testWrongSyntax,
 		\testFree,
 		\testFreeAll,
+		\testSendFile,
 	],
 
 	testBasic: {
@@ -173,6 +174,22 @@
 		condition.hang;
 
 		playSuccess.and(deleteSuccess).and(langSuccess);
+	},
+
+	testSendFile: {
+		var success = false;
+		var condition = Condition();
+
+		FaustDef(\testFile, "process = 0.5;").prSendFile(s);
+		s.sync;
+		{
+			Faust.ar(1, \testFile);
+		}.loadToFloatArray(0.1, action: {|sig|
+			success = (sig[0]-0.5).abs < 0.01;
+			condition.unhang;
+		});
+		condition.hang;
+		success;
 	},
 
 	// meta

@@ -138,9 +138,31 @@ FaustDef {
 		}
 	}
 
+	sendScriptMsg {|paramFilePath, completionMsg|
+		^[
+			\cmd,
+			\faustscript,
+			hash,
+			paramFilePath,
+			code,
+			completionMsg,
+		]
+	}
+
+	prSendFileMsg {|paramFilePath, faustFilePath, completionMsg|
+		^[
+			\cmd,
+			\faustfile,
+			hash,
+			paramFilePath,
+			faustFilePath,
+			completionMsg,
+		]
+	}
+
 	prSendScript {|server, completionMsg|
 		var tempPath = FaustDef.prParamPath(hash);
-		var message = [\cmd, \faustscript, hash, tempPath, code, completionMsg].asRawOSC;
+		var message = this.sendScriptMsg(tempPath, completionMsg).asRawOSC;
 		if(message.size < (65535 div: 4), {
 			server.sendRaw(message);
 		}, {
@@ -164,7 +186,11 @@ FaustDef {
 			f.write(code);
 		});
 
-		server.sendMsg(\cmd, \faustfile, hash, tmpFilePath, completionMsg);
+		server.sendMsg(*this.prSendFileMsg(
+			FaustDef.prParamPath(hash),
+			tmpFilePath,
+			completionMsg,
+		));
 
 		fork {
 			var deleteSuccess;

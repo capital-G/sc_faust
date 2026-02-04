@@ -34,7 +34,7 @@ bool writeParamsToFile(const std::vector<ParamPair>& params, const std::string& 
 }
 
 /*! @brief Runs in stage 2 (NRT) and compiles the DSP code */
-bool compileScript(World*, void* cmdData) {
+bool compileScript(World*, void* cmdData, std::string& code) {
     auto payload = static_cast<CompileCodeCallbackPayload*>(cmdData);
 
     auto errorMessage = std::string();
@@ -49,7 +49,7 @@ bool compileScript(World*, void* cmdData) {
     auto name_app = std::string("sc_faust");
     name_app += std::to_string(gFactoryCounter);
     gFactoryCounter += 1;
-    payload->factory = createDSPFactoryFromString(name_app, payload->code, 2, argv, target, errorMessage, -1);
+    payload->factory = createDSPFactoryFromString(name_app, code, 2, argv, target, errorMessage, -1);
 
     if (!errorMessage.empty()) {
         Print("ERROR: %s\n", errorMessage.c_str());
@@ -75,6 +75,33 @@ bool compileScript(World*, void* cmdData) {
 
     return true;
 };
+
+/*! @brief loads the content of a file in stage 2 */
+bool compileScriptFromFile(World* world, void* cmdData) {
+    auto payload = static_cast<CompileCodeCallbackPayload*>(cmdData);
+
+    auto codeFile = std::ifstream(payload->oscString, std::ios::binary);
+    if (!codeFile.is_open()) {
+        Print("ERROR: Could not open DynGen file at %s\n", payload->oscString);
+        return false;
+    }
+
+    codeFile.seekg(0, std::ios::end);
+    const std::streamsize codeSize = codeFile.tellg();
+    codeFile.seekg(0);
+
+    std::string codeBuffer;
+    codeBuffer.resize(codeSize);
+    codeFile.read(codeBuffer.data(), codeSize);
+    return compileScript(world, cmdData, codeBuffer);
+}
+
+/*! @brief extracts the script from the osc data in stage 2 */
+bool compileScriptFromString(World* world, void* cmdData) {
+    auto payload = static_cast<CompileCodeCallbackPayload*>(cmdData);
+    auto code = std::string(payload->oscString);
+    return compileScript(world, cmdData, code);
+}
 
 /*! @brief runs in stage 3 (RT). Insert the factory into our library */
 bool swapCode(World* world, void* cmdData) {
@@ -117,7 +144,7 @@ bool swapCode(World* world, void* cmdData) {
 };
 
 namespace Library {
-void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr) {
+void buildGenericPayload(World* world, void*, sc_msg_iter* args, void* replyAddr, const bool isFile) {
     // set the world for the faust memory manager once
     if (gFaustMemoryManager == nullptr) {
         gFaustMemoryManager = new FaustMemoryManager();
@@ -130,7 +157,7 @@ void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr)
     }
     // init payload such that we do nat have dangling pointers
     payload->factory = nullptr;
-    payload->code = nullptr;
+    payload->oscString = nullptr;
     payload->paramExchangePath = nullptr;
     payload->numOutputs = 0;
     payload->numParams = 0;
@@ -148,15 +175,15 @@ void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr)
 
     const char* code = args->gets();
     auto codeLength = strlen(code) + 1;
-    payload->code = static_cast<char*>(RTAlloc(world, codeLength));
-    if (!payload->code) {
+    payload->oscString = static_cast<char*>(RTAlloc(world, codeLength));
+    if (!payload->oscString) {
         Print("ERROR: Failed to allocate memory for compile code.\n");
         RTFree(world, payload->paramExchangePath);
         RTFree(world, payload);
         return;
     }
     // copy such that we can take ownership of our own copy of the code
-    std::copy_n(code, codeLength, payload->code);
+    std::copy_n(code, codeLength, payload->oscString);
 
     payload->sampleRate = static_cast<int>(world->mSampleRate);
 
@@ -165,7 +192,7 @@ void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr)
     auto* cmdName = static_cast<char*>(RTAlloc(world, sizeof(char) * 18));
     if (!cmdName) {
         Print("ERROR: Failed to allocate memory for script command.\n");
-        RTFree(world, payload->code);
+        RTFree(world, payload->oscString);
         RTFree(world, payload->paramExchangePath);
         RTFree(world, payload);
         return;
@@ -175,15 +202,25 @@ void faustCompileScript(World* world, void*, sc_msg_iter* args, void* replyAddr)
     ft->fDoAsynchronousCommand(
         world, replyAddr,
         // @todo does cmdName leak? will it get freed by the server on its own?
-        cmdName, static_cast<void*>(payload), compileScript, swapCode, nullptr,
+        cmdName, static_cast<void*>(payload), isFile ? compileScriptFromFile : compileScriptFromString, swapCode,
+        nullptr,
         [](World* world, void* cmdData) {
             auto payload = static_cast<Library::CompileCodeCallbackPayload*>(cmdData);
-            RTFree(world, payload->code);
+            RTFree(world, payload->oscString);
             RTFree(world, payload->paramExchangePath);
             RTFree(world, payload);
         },
         0, nullptr);
 }
+
+void faustCompileScript(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr) {
+    buildGenericPayload(world, inUserData, args, replyAddr, false);
+}
+
+void faustCompileFile(World* world, void* inUserData, struct sc_msg_iter* args, void* replyAddr) {
+    buildGenericPayload(world, inUserData, args, replyAddr, true);
+}
+
 void setFaustLibPath(World*, void*, sc_msg_iter* args, void*) {
     const char* libPath = args->gets();
     if (!libPath) {

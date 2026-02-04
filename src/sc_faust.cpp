@@ -91,6 +91,7 @@ PluginLoad("ScFaust") {
     registerUnit<ScFaust>(inTable, "Faust", false);
 
     ft->fDefinePlugInCmd("faustscript", Library::faustCompileScript, nullptr);
+    ft->fDefinePlugInCmd("faustfile", Library::faustCompileFile, nullptr);
     ft->fDefinePlugInCmd("faustlibpath", Library::setFaustLibPath, nullptr);
     ft->fDefinePlugInCmd("faustfree", Library::freeNodeCallback, nullptr);
     ft->fDefinePlugInCmd("faustfreeall", Library::freeAllCallback, nullptr);

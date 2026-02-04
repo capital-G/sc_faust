@@ -32,7 +32,7 @@ struct CodeLibrary {
 /*! @brief payload for async callback to compile faust scripts */
 struct CompileCodeCallbackPayload {
     int hash;
-    char* code;
+    char* oscString;
     int sampleRate;
     char* paramExchangePath;
 
@@ -45,6 +45,9 @@ struct CompileCodeCallbackPayload {
 
 /*! @brief takes an OSC message and compiles triggers an async compilation of the faust code */
 void faustCompileScript(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr);
+
+/*! @brief takes the path to a faust script via an osc message and compiles it async */
+void faustCompileFile(World* inWorld, void* inUserData, struct sc_msg_iter* args, void* replyAddr);
 
 /*! @brief sets gFaustLibPath which is the location of the faust library.
  *  This is NOT RT safe but this should not be expected to be set regularly and while the sounds run.
