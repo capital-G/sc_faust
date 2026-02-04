@@ -129,6 +129,7 @@ bool swapCode(World* world, void* cmdData) {
             Print("ERROR: RTAlloc failed to add item to the code library\n");
             return true;
         }
+        node->world = world;
         node->hash = payload->hash;
         node->next = gLibrary;
         gLibrary = node;
@@ -231,7 +232,7 @@ void setFaustLibPath(World*, void*, sc_msg_iter* args, void*) {
     gFaustLibPath = libPath;
 }
 
-void freeNode(World* world, CodeLibrary* node) {
+void freeNode(CodeLibrary* node) {
     auto curNode = gLibrary;
     CodeLibrary* prevNode = nullptr;
 
@@ -248,10 +249,10 @@ void freeNode(World* world, CodeLibrary* node) {
     if (node->dspFactory) {
         node->dspFactory->shouldDelete = true;
         if (node->dspFactory->instanceCount == 0) {
-            deleteDspFactory(world, node->dspFactory);
+            deleteDspFactory(node->world, node->dspFactory);
         }
     };
-    RTFree(world, node);
+    RTFree(node->world, node);
 }
 
 void freeNodeCallback(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr) {
@@ -265,7 +266,7 @@ void freeNodeCallback(World* world, void* inUserData, sc_msg_iter* args, void* r
         Print("Error: Could not free Faust script with ID %d: not found\n", nodeId);
         return;
     };
-    freeNode(world, node);
+    freeNode(node);
 }
 
 void freeAllCallback(World* world, void* inUserData, sc_msg_iter* args, void* replyAddr) {
@@ -273,7 +274,7 @@ void freeAllCallback(World* world, void* inUserData, sc_msg_iter* args, void* re
     CodeLibrary* nextNode = nullptr;
     while (node != nullptr) {
         nextNode = node->next;
-        freeNode(world, node);
+        freeNode(node);
         node = nextNode;
     }
     gLibrary = nullptr;
@@ -306,5 +307,11 @@ CodeLibrary* findEntry(const int hash) {
         }
     }
     return nullptr;
+}
+
+void cleanup() {
+    while (gLibrary != nullptr) {
+        freeNode(gLibrary);
+    }
 }
 }

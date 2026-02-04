@@ -25,6 +25,8 @@ struct CodeLibrary {
     // this is wrapped as a pointer such that we can delete the code library
     // while there are still units using the dsp factory.
     DSPFactory* dspFactory;
+    // we store this so we can delete all resources on cleanup
+    World* world;
     int numParams;
     int numOutputs;
 };
@@ -68,6 +70,9 @@ void deleteDspFactory(World* world, DSPFactory* factory);
  *  it will return a nullptr.
  */
 CodeLibrary* findEntry(int hash);
+
+/*! @brief cleans up all instances before shutting down */
+void cleanup();
 }
 
 /*! @brief faust memory manager which uses SC's RTalloc */

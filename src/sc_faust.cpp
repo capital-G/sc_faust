@@ -96,3 +96,5 @@ PluginLoad("ScFaust") {
     ft->fDefinePlugInCmd("faustfree", Library::freeNodeCallback, nullptr);
     ft->fDefinePlugInCmd("faustfreeall", Library::freeAllCallback, nullptr);
 }
+
+PluginUnload("ScFaust") { Library::cleanup(); }
